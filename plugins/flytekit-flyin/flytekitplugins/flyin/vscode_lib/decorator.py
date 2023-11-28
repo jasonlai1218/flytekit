@@ -199,8 +199,8 @@ def vscode(
         config (VscodeConfig, optional): VSCode config contains default URLs of the VSCode server and extension remote paths.
     """
 
-    if config is None:
-        config = VscodeConfig()
+    # if config is None:
+    #     config = VscodeConfig()
 
     def wrapper(fn):
         if not enable:
@@ -229,7 +229,7 @@ def vscode(
                 logger.info("Pre execute function executed successfully!")
 
             # 1. Downloads the VSCode server from Internet to local.
-            download_vscode(config)
+            # download_vscode(config)
 
             # 2. Launches and monitors the VSCode server.
             # Run the function in the background
