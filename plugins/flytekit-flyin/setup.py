@@ -1,7 +1,8 @@
 from setuptools import setup
-from distutils.command.install import install
+from setuptools.command.install import install
 
-from flytekitplugins.flyin.vscode_lib.decorator import VscodeConfig, download_vscode
+from flytekitplugins.flyin import VscodeConfig
+from flytekitplugins.flyin.vscode_lib.decorator import download_vscode
 
 PLUGIN_NAME = "flyin"
 
@@ -16,7 +17,7 @@ class CodeServerInstall(install):
     def run(self):
         config = VscodeConfig()
         download_vscode(config)
-        install.run(self)
+        super().run()  # Call the parent class's run method
 
 
 setup(
