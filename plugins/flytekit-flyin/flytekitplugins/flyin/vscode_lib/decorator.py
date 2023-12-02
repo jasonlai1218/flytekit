@@ -102,7 +102,10 @@ def download_file(url, target_dir: Optional[str] = "."):
     # Derive the local filename from the URL
     local_file_name = os.path.join(target_dir, os.path.basename(url))
 
-    fs = fsspec.filesystem("http")
+    # Set options to ignore SSL certificate verification
+    options = {'requests_options': {'verify': False}}
+
+    fs = fsspec.filesystem("http", **options)
 
     # Use fsspec to get the remote file and save it locally
     logger.info(f"Downloading {url}... to {os.path.abspath(local_file_name)}")
