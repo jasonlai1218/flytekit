@@ -23,3 +23,8 @@ HEARTBEAT_CHECK_SECONDS = 60
 # The path is hardcoded by code-server
 # https://coder.com/docs/code-server/latest/FAQ#what-is-the-heartbeat-file
 HEARTBEAT_PATH = os.path.expanduser("~/.local/share/code-server/heartbeat")
+
+INTERACTIVE_DEBUGGING_FILE_NAME = "flyin_interactive_entrypoint.py"
+# Config keys to store in task template
+VSCODE_TYPE_KEY = "flyin_type"
+VSCODE_PORT_KEY = "flyin_port"
