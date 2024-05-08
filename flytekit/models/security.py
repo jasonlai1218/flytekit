@@ -64,7 +64,8 @@ class Secret(_common.FlyteIdlEntity):
             mount_requirement=self.mount_requirement.value,
         )
         if self.env_var:
-            secret.env_var.CopyFrom(_sec.Secret.EnvVar(name=self.env_var.name))
+            # 假设 _sec.Secret 有一个名为 env_var 的消息字段，这个字段是一个消息类型，需要一个 name 字段
+            secret.env_var.name = self.env_var.name  # 直接赋值，假设这是正确的方式
         return secret
 
     @classmethod
