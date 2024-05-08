@@ -64,7 +64,7 @@ class Secret(_common.FlyteIdlEntity):
             mount_requirement=self.mount_requirement.value,
         )
         if self.env_var:
-            secret.env_var.name = self.env_var.name
+            secret.env_var.CopyFrom(_sec.Secret.EnvVar(name=self.env_var.name))
         return secret
 
     @classmethod
