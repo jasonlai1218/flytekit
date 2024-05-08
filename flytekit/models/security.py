@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import List, Optional
 
@@ -36,11 +36,42 @@ class Secret(_common.FlyteIdlEntity):
         Caution: May not be supported in all environments
         """
 
+    @dataclass
+    class MountEnvVar(_common.FlyteIdlEntity):
+        name: str
+
+        def to_flyte_idl(self) -> _sec.Secret.MountEnvVar:
+            return _sec.Secret.MountEnvVar(
+                name=self.name,
+            )
+
+        @classmethod
+        def from_flyte_idl(cls, pb2_object: _sec.Secret.MountEnvVar):
+            return cls(
+                name=pb2_object.name,
+            )
+
+    @dataclass
+    class MountFile(_common.FlyteIdlEntity):
+        path: str
+
+        def to_flyte_idl(self) -> _sec.Secret.MountFile:
+            return _sec.Secret.MountFile(
+                path=self.path,
+            )
+
+        @classmethod
+        def from_flyte_idl(cls, pb2_object: _sec.Secret.MountFile):
+            return cls(
+                path=pb2_object.path,
+            )
+
     group: Optional[str] = None
     key: Optional[str] = None
     group_version: Optional[str] = None
     mount_requirement: MountType = MountType.ANY
-    env_var: Optional[str] = None
+    env_var: Optional[MountEnvVar] = field(default_factory=lambda: None)
+    file: Optional[MountFile] = field(default_factory=lambda: None)
 
     def __post_init__(self):
         from flytekit.configuration.plugin import get_plugin
@@ -58,7 +89,8 @@ class Secret(_common.FlyteIdlEntity):
             group_version=self.group_version,
             key=self.key,
             mount_requirement=self.mount_requirement.value,
-            env_var=self.env_var,
+            env_var=_sec.Secret.MountEnvVar(name=self.env_var.name) if self.env_var else None,
+            file=_sec.Secret.MountFile(path=self.file.path) if self.file else None,
         )
         return secret
 
@@ -69,7 +101,8 @@ class Secret(_common.FlyteIdlEntity):
             group_version=pb2_object.group_version if pb2_object.group_version else None,
             key=pb2_object.key if pb2_object.key else None,
             mount_requirement=Secret.MountType(pb2_object.mount_requirement),
-            env_var=pb2_object.env_var,
+            env_var=Secret.MountEnvVar.from_flyte_idl(pb2_object.env_var) if pb2_object.HasField("env_var") else None,
+            file=Secret.MountFile.from_flyte_idl(pb2_object.file) if pb2_object.HasField("file") else None,
         )
 
 

@@ -354,17 +354,21 @@ class SecretsManager(object):
         key: Optional[str] = None,
         group_version: Optional[str] = None,
         encode_mode: str = "r",
+        env_name: Optional[str] = None,
     ) -> str:
         """
         Retrieves a secret using the resolution order -> Env followed by file. If not found raises a ValueError
         param encode_mode, defines the mode to open files, it can either be "r" to read file, or "rb" to read binary file
         """
-        env_var = self.get_secrets_env_var(group, key, group_version)
-        fpath = self.get_secrets_file(group, key, group_version)
+        self.assert_env_name_key(env_name)
+        env_var = self.get_secrets_env_var(group, key, group_version, env_name)
+        fpath = None
+        if env_name is None:
+            fpath = self.get_secrets_file(group, key, group_version)
         v = os.environ.get(env_var)
         if v is not None:
             return v.strip()
-        if os.path.exists(fpath):
+        if fpath is not None and os.path.exists(fpath):
             with open(fpath, encode_mode) as f:
                 return f.read().strip()
         raise ValueError(
@@ -373,11 +377,14 @@ class SecretsManager(object):
         )
 
     def get_secrets_env_var(
-        self, group: Optional[str] = None, key: Optional[str] = None, group_version: Optional[str] = None
+        self, group: Optional[str] = None, key: Optional[str] = None, group_version: Optional[str] = None, env_name: Optional[str] = None,
     ) -> str:
         """
         Returns a string that matches the ENV Variable to look for the secrets
         """
+        self.assert_env_name_key(env_name)
+        if env_name is not None:
+            return env_name
         l = [k.upper() for k in filter(None, (group, group_version, key))]
         return f"{self._env_prefix}{'_'.join(l)}"
 
@@ -390,6 +397,11 @@ class SecretsManager(object):
         l = [k.lower() for k in filter(None, (group, group_version, key))]
         l[-1] = f"{self._file_prefix}{l[-1]}"
         return os.path.join(self._base_dir, *l)
+
+    @staticmethod
+    def assert_env_name_key(env_name: Optional[str] = None):
+        if env_name is not None and len(env_name) <= 0:
+            raise ValueError(f"Invalid env_name {env_name}")
 
 
 @dataclass(frozen=True)
