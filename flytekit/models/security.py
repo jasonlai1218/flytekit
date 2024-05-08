@@ -17,6 +17,7 @@ class Secret(_common.FlyteIdlEntity):
         key is optional and can be an individual secret identifier within the secret For k8s this is required
         version is the version of the secret. This is an optional field
         mount_requirement provides a hint to the system as to how the secret should be injected
+        env_var: Specifies the name of the environment variable through which the secret will be accessible.
     """
 
     class MountType(Enum):
@@ -35,10 +36,15 @@ class Secret(_common.FlyteIdlEntity):
         Caution: May not be supported in all environments
         """
 
+    class MountEnvVar:
+        def __init__(self, name: str):
+            self.name = name
+
     group: Optional[str] = None
     key: Optional[str] = None
     group_version: Optional[str] = None
     mount_requirement: MountType = MountType.ANY
+    env_var: Optional[MountEnvVar] = None
 
     def __post_init__(self):
         from flytekit.configuration.plugin import get_plugin
@@ -51,20 +57,25 @@ class Secret(_common.FlyteIdlEntity):
             raise ValueError("Group is a required parameter")
 
     def to_flyte_idl(self) -> _sec.Secret:
-        return _sec.Secret(
+        secret = _sec.Secret(
             group=self.group,
             group_version=self.group_version,
             key=self.key,
             mount_requirement=self.mount_requirement.value,
         )
+        if self.env_var:
+            secret.env_var.name = self.env_var.name
+        return secret
 
     @classmethod
     def from_flyte_idl(cls, pb2_object: _sec.Secret) -> "Secret":
+        env_var = cls.MountEnvVar(pb2_object.env_var.name) if pb2_object.HasField("env_var") else None
         return cls(
             group=pb2_object.group,
             group_version=pb2_object.group_version if pb2_object.group_version else None,
             key=pb2_object.key if pb2_object.key else None,
             mount_requirement=Secret.MountType(pb2_object.mount_requirement),
+            env_var=env_var,
         )
 
 
