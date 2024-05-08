@@ -36,15 +36,12 @@ class Secret(_common.FlyteIdlEntity):
         Caution: May not be supported in all environments
         """
 
-    class MountEnvVar:
-        def __init__(self, name: str):
-            self.name = name
-
     group: Optional[str] = None
     key: Optional[str] = None
     group_version: Optional[str] = None
     mount_requirement: MountType = MountType.ANY
-    # env_var: Optional[MountEnvVar] = None
+    env_var: Optional[str] = None  # New field
+    file: Optional[str] = None  # New field
 
     def __post_init__(self):
         from flytekit.configuration.plugin import get_plugin
@@ -62,17 +59,20 @@ class Secret(_common.FlyteIdlEntity):
             group_version=self.group_version,
             key=self.key,
             mount_requirement=self.mount_requirement.value,
+            env_var=self.env_var,
+            file=self.file,
         )
         return secret
 
     @classmethod
     def from_flyte_idl(cls, pb2_object: _sec.Secret) -> "Secret":
-        # env_var = cls.MountEnvVar(pb2_object.env_var.name) if pb2_object.HasField("env_var") else None
         return cls(
             group=pb2_object.group,
             group_version=pb2_object.group_version if pb2_object.group_version else None,
             key=pb2_object.key if pb2_object.key else None,
             mount_requirement=Secret.MountType(pb2_object.mount_requirement),
+            env_var=pb2_object.env_var,
+            file=pb2_object.file,
         )
 
 
