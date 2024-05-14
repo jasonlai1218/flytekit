@@ -317,11 +317,14 @@ class AsyncAgentExecutorMixin:
             ctx.file_access.put_data(path, f"{output_prefix}/inputs.pb")
             task_template = render_task_template(task_template, output_prefix)
 
-        resource_meta = await mirror_async_methods(
-            self._agent.create,
-            task_template=task_template,
-            inputs=literal_map,
-            output_prefix=output_prefix,
+        resource_meta = await asyncio.wait_for(
+            mirror_async_methods(
+                self._agent.create,
+                task_template=task_template,
+                inputs=literal_map,
+                output_prefix=output_prefix,
+            ),
+            timeout=self._get_timeout()
         )
 
         signal.signal(signal.SIGINT, partial(self.signal_handler, resource_meta))  # type: ignore
@@ -339,7 +342,10 @@ class AsyncAgentExecutorMixin:
             while not is_terminal_phase(phase):
                 progress.start_task(task)
                 time.sleep(1)
-                resource = await mirror_async_methods(self._agent.get, resource_meta=resource_meta)
+                resource = await asyncio.wait_for(
+                    mirror_async_methods(self._agent.get, resource_meta=resource_meta),
+                    timeout=self._get_timeout()
+                )
                 if self._clean_up_task:
                     await self._clean_up_task
                     sys.exit(1)
@@ -363,3 +369,9 @@ class AsyncAgentExecutorMixin:
         if self._clean_up_task is None:
             co = mirror_async_methods(self._agent.delete, resource_meta=resource_meta)
             self._clean_up_task = asyncio.create_task(co)
+
+    def _get_timeout(self) -> int:
+        """
+        获取超时时间，默认值可以是 60 秒。
+        """
+        return 60
